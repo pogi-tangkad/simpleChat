@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat</title>
+    <style>
+        #chat-box {
+        height: 60vh; /* Set the height to 60% of the viewport height */
+        overflow-y: scroll;
+        border: 1px solid #ccc; /* Add a border around the chat box */
+        padding: 10px; /* Add padding to the chat box */
+        }
+        
+        #display-name,
+        #message-input {
+            flex: 1; /* Let input fields grow to fill available space */
+            padding: 8px; /* Add padding to the input fields */
+            margin-right: 8px; /* Add some space between input fields */
+            border: 1px solid #ccc; /* Add a border around the input fields */
+        }
+        
+        button {
+            padding: 8px 16px; /* Add padding to the button */
+            border: 1px solid #ccc; /* Add a border around the button */
+            background-color: #f0f0f0; /* Set background color */
+            cursor: pointer; /* Change cursor to pointer on hover */
+        }
+        
+        button:hover {
+            background-color: #e0e0e0; /* Change background color on hover */
+        }
+    </style>
+</head>
+<body>
+    
+    <input type="text" id="display-name" placeholder="Your Display Name" maxlength="16">
+    <input type="text" id="message-input" placeholder="Type your message..." maxlength="128">
+    <button onclick="sendMessage()">Send</button>
+    <div id="chat-box"></div>
+
+    <script>
+        function sendMessage() {
+            const displayNameInput = document.getElementById("display-name");
+            const messageInput = document.getElementById("message-input");
+            const displayName = displayNameInput.value.trim();
+            const message = messageInput.value.trim();
+
+            if (!displayName || !message) {
+                alert("Please enter your display name and message.");
+                return;
+            }
+
+            const data = {
+                displayName,
+                message
+            };
+
+            fetch('/new-message', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                
+                messageInput.value = "";
+            })
+            .catch(error => {
+                console.error('Error sending message:', error);
+            });
+        }
+
+        // Function to handle sending message on Enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Add event listener for key press on message input
+        const messageInput = document.getElementById("message-input");
+        messageInput.addEventListener('keydown', handleKeyPress);
+
+        function fetchMessages() {
+            fetch('/messages')
+            .then(response => response.json())
+            .then(messages => {
+                const chatBox = document.getElementById("chat-box");
+                chatBox.innerHTML = ""; // Clear previous messages
+                messages.forEach(message => {
+                    const p = document.createElement("p");
+                    
+                    // Create a span element for the display name and apply bold styling
+                    const displayNameSpan = document.createElement("span");
+                    displayNameSpan.textContent = message.displayName;
+                    displayNameSpan.style.fontWeight = "bold"; // Apply bold styling
+                    
+                    // Append display name and message content to the paragraph element
+                    p.appendChild(displayNameSpan);
+                    p.appendChild(document.createTextNode(`: ${message.message}`));
+                    
+                    chatBox.appendChild(p);
+                });
+                // Scroll to the bottom of the chat box
+                chatBox.scrollTop = chatBox.scrollHeight;
+            })
+            .catch(error => {
+                console.error('Error fetching messages:', error);
+            })
+            .finally(() => {
+                // Continue polling for new messages
+                setTimeout(fetchMessages, 1000);
+            });
+        }
+
+        // Start fetching messages
+        fetchMessages();
+    </script>
+</body>
+</html>
