@@ -13,6 +13,7 @@ var (
 	messages  []Message
 	mu        sync.Mutex
 	broadcast = make(chan struct{}, 100) // Increase buffer size
+	pl        = fmt.Println
 )
 
 type Message struct {
@@ -45,15 +46,15 @@ func handleNewMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	messages = append(messages, msg)
-	userIP, _, err := net.SplitHostPort(r.RemoteAddr)
-	fmt.Println("New message:", msg.Message, "\nFrom:", msg.DisplayName, "\nIP: ", userIP)
+	clientIP, _, err := net.SplitHostPort(r.RemoteAddr)
+	pl("New message:", msg.Message, "\nFrom:", msg.DisplayName, "\nIP:", clientIP)
 
 	// Signal that a new message has arrived
-	fmt.Println("Signaling new message")
+	pl("Signaling new message")
 	select {
 	case broadcast <- struct{}{}:
 	default:
-		fmt.Println("Broadcast channel is full, dropping message")
+		pl("Broadcast channel is full, dropping message")
 	}
 }
 
@@ -66,6 +67,6 @@ func main() {
 	http.HandleFunc("/messages", handleMessages)
 	http.HandleFunc("/new-message", handleNewMessage)
 
-	fmt.Println("Server is running on :8080")
+	pl("Server is running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
