@@ -10,4 +10,4 @@ Once that is done, I want to create a database for storage and recall if the ser
 Since I don't want to use external libraries, I am probably going to use Python to interact with
 sqlite3.
 
-I would also like to build in accounts/authentication and sessions/rooms for that chat.
+I would also like to build in accounts/authentication and sessions/rooms for that chat, but then it wouldn't be simple chat ;)
